@@ -1,0 +1,15 @@
+{
+  "name": "nova-browser",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Nova — a modern, sleek, lightning-fast browser built with Tauri.",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0"
+  }
+}

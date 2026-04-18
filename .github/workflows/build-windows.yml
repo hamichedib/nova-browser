@@ -1,0 +1,70 @@
+name: Build Nova (Windows)
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build .exe installer
+    runs-on: windows-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cache cargo registry & build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install npm deps
+        run: npm ci || npm install
+
+      - name: Install Tauri CLI
+        run: npm install -D @tauri-apps/cli@^2
+
+      - name: Build (Tauri bundle)
+        run: npx tauri build --bundles nsis,msi
+
+      - name: Show bundle output
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse -Path src-tauri/target/release/bundle |
+            Select-Object FullName, Length |
+            Format-Table -AutoSize
+
+      - name: Upload NSIS installer (.exe)
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-windows-nsis-exe
+          path: src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+
+      - name: Upload MSI installer (.msi)
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-windows-msi
+          path: src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: warn
+
+      - name: Upload raw Nova.exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-windows-raw-exe
+          path: src-tauri/target/release/Nova.exe
+          if-no-files-found: warn
