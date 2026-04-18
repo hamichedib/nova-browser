@@ -134,7 +134,13 @@
   async function newTab(url) {
     try {
       const info = await invoke("new_tab", { url: url ?? null });
-      if (!getTab(info.id)) {
+      // If a tabs-changed event already populated a placeholder for this id,
+      // update it with the real URL + title; otherwise insert a fresh entry.
+      const existing = getTab(info.id);
+      if (existing) {
+        existing.url = info.url;
+        existing.title = prettyTitle(info.url);
+      } else {
         state.tabs.push({
           id: info.id,
           url: info.url,
@@ -337,7 +343,10 @@
     const ids = p.tabs || [];
     state.tabs = ids.map((id) => {
       const existing = getTab(id);
-      return existing || { id, url: "about:blank", title: "New tab" };
+      // Default to the bundled new-tab page — that's what the backend loads
+      // for tabs created without an explicit URL (including the initial one
+      // seeded during app setup).
+      return existing || { id, url: "nova://newtab", title: "New tab" };
     });
     state.activeId = p.active || null;
     renderTabs();
