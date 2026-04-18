@@ -1,8 +1,7 @@
-; Nova installer — tiny NSIS wrapper around Nova.exe (the Rust launcher).
+; Nova installer — minimal NSIS wrapper around Nova.exe.
 ;
-; Installs to %LOCALAPPDATA%\Programs\Nova so we don't need admin rights.
-; Nova.exe downloads Firefox on first run if it isn't already present on the
-; system.
+; Installs to %LOCALAPPDATA%\Programs\Nova so we don't need admin rights
+; (which also reduces SmartScreen / UAC friction). Supports Arabic + English.
 
 !define APP_NAME "Nova"
 !define APP_VERSION "0.1.0"
@@ -24,26 +23,32 @@ BrandingText "Nova — powered by Firefox"
 ; ---------- UI ----------
 !include "MUI2.nsh"
 !define MUI_ABORTWARNING
-!insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_DIRECTORY
+!define MUI_ICON "..\launcher\assets\nova.ico"
+!define MUI_UNICON "..\launcher\assets\nova.ico"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\${APP_EXE}"
+!define MUI_FINISHPAGE_RUN_TEXT "Launch Nova"
+
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
+
 !insertmacro MUI_LANGUAGE "English"
+!insertmacro MUI_LANGUAGE "Arabic"
 
 ; ---------- install ----------
 Section "Nova" SecNova
   SectionIn RO
   SetOutPath "$INSTDIR"
   File "dist\Nova.exe"
+  File "..\launcher\assets\nova.ico"
 
   ; Start menu shortcut
   CreateDirectory "$SMPROGRAMS\Nova"
-  CreateShortCut "$SMPROGRAMS\Nova\Nova.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\${APP_EXE}" 0
+  CreateShortCut "$SMPROGRAMS\Nova\Nova.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\nova.ico" 0
 
   ; Desktop shortcut
-  CreateShortCut "$DESKTOP\Nova.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\${APP_EXE}" 0
+  CreateShortCut "$DESKTOP\Nova.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\nova.ico" 0
 
   ; Uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -56,7 +61,7 @@ Section "Nova" SecNova
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Nova" \
     "Publisher" "${APP_PUBLISHER}"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Nova" \
-    "DisplayIcon" "$INSTDIR\${APP_EXE}"
+    "DisplayIcon" "$INSTDIR\nova.ico"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Nova" \
     "UninstallString" "$INSTDIR\Uninstall.exe"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Nova" \
@@ -70,6 +75,7 @@ SectionEnd
 ; ---------- uninstall ----------
 Section "Uninstall"
   Delete "$INSTDIR\${APP_EXE}"
+  Delete "$INSTDIR\nova.ico"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir  "$INSTDIR"
 
