@@ -131,16 +131,52 @@ fn apply_layout(app: &AppHandle) {
     }
 }
 
-/// Bring the chrome webview to the top of the Z-order so its buttons
-/// always receive clicks. Tauri doesn't expose SetWindowPos directly, but
-/// toggling visibility off/on is enough to re-raise a child webview on
-/// both Windows (WebView2) and Linux (webkit2gtk).
+/// Bring the chrome webview to the very top of the native Z-order so its
+/// toolbar buttons always receive clicks — even after we add new tab
+/// webviews (which, on Windows, become child HWNDs layered on top of
+/// previously-created siblings).
+///
+/// On Windows we reach into the native `ICoreWebView2Controller`, read the
+/// HWND hosting the chrome webview, and call `SetWindowPos(HWND_TOP, ...)`.
+/// This is the only reliable way to force Z-order on WebView2 — merely
+/// toggling `hide` / `show` / `set_focus` does *not* reorder sibling HWNDs.
+///
+/// On other platforms we fall back to `show()` which is good enough for
+/// webkit2gtk.
 fn raise_chrome(app: &AppHandle) {
-    if let Some(chrome) = app.get_webview("chrome") {
-        let _ = chrome.hide();
-        let _ = chrome.show();
-        let _ = chrome.set_focus();
+    let Some(chrome) = app.get_webview("chrome") else {
+        return;
+    };
+
+    #[cfg(windows)]
+    {
+        let _ = chrome.with_webview(|platform_webview| unsafe {
+            use windows::Win32::Foundation::HWND;
+            use windows::Win32::UI::WindowsAndMessaging::{
+                SetWindowPos, HWND_TOP, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
+            };
+            let controller = platform_webview.controller();
+            let mut parent_hwnd: HWND = HWND::default();
+            if controller.ParentWindow(&mut parent_hwnd).is_ok()
+                && parent_hwnd.0 != std::ptr::null_mut()
+            {
+                let _ = SetWindowPos(
+                    parent_hwnd,
+                    Some(HWND_TOP),
+                    0,
+                    0,
+                    0,
+                    0,
+                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+                );
+            }
+        });
     }
+
+    // On every platform, toggling visibility + focusing is a cheap extra
+    // nudge that tells the compositor this webview is now active.
+    let _ = chrome.show();
+    let _ = chrome.set_focus();
 }
 
 fn emit_tabs_changed(app: &AppHandle) {
