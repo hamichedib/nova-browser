@@ -164,7 +164,7 @@ fn raise_chrome(app: &AppHandle) {
             {
                 let _ = SetWindowPos(
                     parent_hwnd,
-                    HWND_TOP,
+                    Some(HWND_TOP),
                     0,
                     0,
                     0,
