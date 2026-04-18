@@ -1,0 +1,20 @@
+/*
+ * Nova — Firefox content theme for built-in about: pages
+ *
+ * Keep the aurora palette on Firefox's internal pages (about:blank,
+ * about:home, about:newtab fall-back) so the whole browser feels like Nova.
+ */
+
+@-moz-document url("about:blank"),
+               url-prefix("about:home"),
+               url-prefix("about:newtab") {
+  body {
+    background: radial-gradient(
+      ellipse at 20% 10%,
+      #1a0e4a 0%,
+      #0a0119 60%,
+      #020010 100%
+    ) !important;
+    color: #eef1ff !important;
+  }
+}

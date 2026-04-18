@@ -1,62 +1,47 @@
 # Nova
 
-A modern, sleek, lightning-fast browser for Windows (and Linux/macOS), built with [Tauri 2](https://tauri.app). 2026-inspired glassmorphism UI, native multi-webview tabs, keyboard-first navigation.
+**Nova** is a modern, sleek browser powered by the **Firefox (Gecko)** engine.
 
-> Tiny footprint (~10 MB installer). Uses the system's native webview (WebView2 on Windows) for blazing-fast page rendering.
+Nova itself is a tiny (~400 KB) native launcher. On first run it locates
+Firefox on your system — or downloads the official Mozilla Firefox installer
+and installs a private copy to `%LOCALAPPDATA%\Nova\firefox` — then launches
+it with a pre-configured Nova profile that gives you:
 
-## Features
+- A glassmorphism theme (aurora gradients, translucent toolbars) applied via
+  `userChrome.css`.
+- A branded new-tab / home page with a live clock, quick-access tiles, and a
+  smart URL / search bar.
+- Quiet defaults (no onboarding tabs, no default-browser prompts, no
+  telemetry popups).
 
-- Native multi-tab browsing (each tab is a real webview — no iframes)
-- Frosted-glass, 2026-inspired UI with light/dark themes
-- Smart address bar (URL or Google search)
-- Familiar keyboard shortcuts: `Ctrl+T`, `Ctrl+W`, `Ctrl+R`, `Ctrl+L`, `Ctrl+Tab`, `Alt+Left/Right`
-- Custom window controls with drag region
-- Instant tab switching (inactive tabs stay alive in memory)
+## Install on Windows
 
-## Download
+1. Download **`Nova-Setup-0.1.0.exe`** from the latest
+   [GitHub Actions build](https://github.com/hamichedib/nova-browser/actions).
+2. Run it. Windows SmartScreen may warn because the exe isn't code-signed —
+   click **More info → Run anyway**.
+3. Launch **Nova** from the Start menu or the desktop shortcut. On first run
+   Nova will download Firefox (~60 MB) and install it privately — this only
+   happens once.
 
-Every push to the repo builds a fresh Windows installer via GitHub Actions. Grab the latest `.exe` from the most recent run:
+## Repo layout
 
-**[Actions → latest Build Nova (Windows) run → `nova-windows-nsis-exe`](../../actions/workflows/build-windows.yml)**
+- `launcher/` — Rust source for `Nova.exe` (the native launcher).
+- `launcher/profile/` — Files copied into the Nova Firefox profile:
+  - `chrome/userChrome.css` — Firefox UI theme.
+  - `chrome/userContent.css` — Tweaks for `about:*` pages.
+  - `user.js` — Locked preferences (homepage, telemetry off, …).
+  - `newtab.html` — Nova's branded home / new-tab page.
+- `installer/Nova.nsi` — NSIS installer script that wraps `Nova.exe`.
+- `.github/workflows/build-windows.yml` — CI that builds the Windows exe +
+  installer on every push.
 
-## Development
+## Develop locally (Linux / macOS)
 
-### Prerequisites
-- [Rust](https://rustup.rs/) (stable, 1.85+)
-- [Node.js](https://nodejs.org/) (20+)
-- On Linux: `libwebkit2gtk-4.1-dev librsvg2-dev libsoup-3.0-dev`
-- On Windows: WebView2 (pre-installed on Windows 11; Win10 installer auto-fetches)
-
-### Run
 ```bash
-npm install
-npm run dev
+cd launcher
+cargo run --release
 ```
 
-### Build installers
-```bash
-npm run build          # produces platform-appropriate bundles
-```
-
-Windows output lands in `src-tauri/target/release/bundle/nsis/*.exe`.
-
-## Architecture
-
-```
-┌──────────────────────────────────────────────────┐
-│ main Window  (tauri::Window, no embedded webview)│
-│ ┌──────────────────────────────────────────────┐ │
-│ │ chrome  webview — index.html / chrome.{css,js}│ │ ← 96px tall
-│ └──────────────────────────────────────────────┘ │
-│ ┌──────────────────────────────────────────────┐ │
-│ │ tab-0 / tab-1 / ... webviews (active shown,   │ │
-│ │ inactive parked off-screen)                   │ │
-│ └──────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────┘
-```
-
-The Rust backend owns tab lifecycle (`new_tab`, `close_tab`, `switch_tab`, `navigate`, etc.). The chrome UI talks to it via `invoke()`, and subscribes to `nova://tabs-changed` events.
-
-## License
-
-MIT
+On Linux / macOS, Nova launches your system Firefox against the Nova profile
+— no download step needed. Great for iterating on the theme.

@@ -1,0 +1,152 @@
+/*
+ * Nova — Firefox chrome theme
+ *
+ * Applied to Firefox's own UI (tab strip, toolbar, URL bar, menus, etc.).
+ * Lit-up glassmorphism with aurora gradients to match the Nova new-tab page.
+ */
+
+/* ===== palette ===== */
+:root {
+  --nova-bg-0: #0a0119;
+  --nova-bg-1: #120830;
+  --nova-bg-2: #1a0e4a;
+  --nova-accent: #8a5cff;
+  --nova-accent-2: #4cd9ff;
+  --nova-text: #eef1ff;
+  --nova-muted: rgba(238, 241, 255, 0.62);
+  --nova-border: rgba(138, 92, 255, 0.35);
+  --nova-panel: rgba(18, 8, 48, 0.72);
+}
+
+/* ===== titlebar + toolbars ===== */
+#main-window,
+#navigator-toolbox,
+#TabsToolbar,
+#nav-bar,
+#PersonalToolbar,
+#titlebar {
+  background: linear-gradient(
+    135deg,
+    var(--nova-bg-0) 0%,
+    var(--nova-bg-1) 45%,
+    var(--nova-bg-2) 100%
+  ) !important;
+  color: var(--nova-text) !important;
+  border-color: var(--nova-border) !important;
+}
+
+/* subtle top aurora glow under the title bar */
+#navigator-toolbox::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--nova-accent) 40%,
+    var(--nova-accent-2) 60%,
+    transparent
+  );
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ===== tabs ===== */
+.tabbrowser-tab {
+  color: var(--nova-text) !important;
+}
+.tab-background {
+  border-radius: 10px !important;
+  margin-block: 4px !important;
+}
+.tabbrowser-tab[selected="true"] .tab-background {
+  background: linear-gradient(
+    180deg,
+    rgba(138, 92, 255, 0.35),
+    rgba(76, 217, 255, 0.18)
+  ) !important;
+  box-shadow: 0 0 0 1px var(--nova-border), 0 6px 22px -10px var(--nova-accent) !important;
+}
+.tabbrowser-tab:not([selected="true"]):hover .tab-background {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+.tab-line {
+  display: none !important;
+}
+
+/* ===== URL bar ===== */
+#urlbar {
+  --urlbar-box-bgcolor: rgba(255, 255, 255, 0.06) !important;
+  --urlbar-box-hover-bgcolor: rgba(255, 255, 255, 0.1) !important;
+  --urlbar-box-focus-bgcolor: rgba(255, 255, 255, 0.12) !important;
+}
+#urlbar-background {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid var(--nova-border) !important;
+  border-radius: 14px !important;
+  backdrop-filter: blur(18px);
+}
+#urlbar[focused="true"] > #urlbar-background {
+  border-color: var(--nova-accent) !important;
+  box-shadow: 0 0 0 3px rgba(138, 92, 255, 0.22) !important;
+}
+#urlbar-input {
+  color: var(--nova-text) !important;
+}
+#urlbar-input::placeholder {
+  color: var(--nova-muted) !important;
+}
+
+/* ===== toolbar buttons ===== */
+toolbarbutton {
+  color: var(--nova-text) !important;
+}
+toolbarbutton .toolbarbutton-icon {
+  fill: var(--nova-text) !important;
+}
+toolbarbutton:hover > .toolbarbutton-icon,
+toolbarbutton:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+}
+
+/* ===== popups & panels ===== */
+panel,
+menupopup,
+.panel-arrowcontent,
+.urlbarView,
+.autocomplete-richlistbox {
+  background: var(--nova-panel) !important;
+  color: var(--nova-text) !important;
+  border: 1px solid var(--nova-border) !important;
+  border-radius: 14px !important;
+  backdrop-filter: blur(22px);
+}
+menuitem,
+menu,
+.urlbarView-row {
+  color: var(--nova-text) !important;
+}
+menuitem:hover,
+menu:hover,
+.urlbarView-row[selected] {
+  background: rgba(138, 92, 255, 0.18) !important;
+}
+
+/* ===== find bar ===== */
+.findbar-container {
+  background: var(--nova-panel) !important;
+  color: var(--nova-text) !important;
+  border-top: 1px solid var(--nova-border) !important;
+}
+
+/* ===== misc polish ===== */
+#PersonalToolbar {
+  border-top: 1px solid var(--nova-border) !important;
+}
+#status-bar,
+statuspanel {
+  background: var(--nova-panel) !important;
+  color: var(--nova-muted) !important;
+}

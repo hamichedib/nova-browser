@@ -9,18 +9,13 @@ on:
 
 jobs:
   build-windows:
-    name: Build .exe installer
+    name: Build Nova.exe + installer
     runs-on: windows-latest
-    timeout-minutes: 40
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
 
       - name: Setup Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -30,41 +25,41 @@ jobs:
       - name: Cache cargo registry & build
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
+          workspaces: launcher
 
-      - name: Install npm deps
-        run: npm ci || npm install
+      - name: Build launcher (release)
+        working-directory: launcher
+        run: cargo build --release --target x86_64-pc-windows-msvc
 
-      - name: Install Tauri CLI
-        run: npm install -D @tauri-apps/cli@^2
-
-      - name: Build (Tauri bundle)
-        run: npx tauri build --bundles nsis,msi
-
-      - name: Show bundle output
+      - name: Stage Nova.exe
         shell: pwsh
         run: |
-          Get-ChildItem -Recurse -Path src-tauri/target/release/bundle |
-            Select-Object FullName, Length |
-            Format-Table -AutoSize
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item launcher\target\x86_64-pc-windows-msvc\release\Nova.exe dist\Nova.exe
+          Get-ChildItem dist | Select-Object Name, Length | Format-Table
 
-      - name: Upload NSIS installer (.exe)
+      - name: Build NSIS installer
+        shell: pwsh
+        run: |
+          # NSIS is pre-installed on windows-latest. Bundle Nova.exe into an
+          # installer that drops it in Program Files and wires up shortcuts.
+          makensis /NOCD installer\Nova.nsi
+
+      - name: Stage installer
+        shell: pwsh
+        run: |
+          Get-ChildItem installer\*.exe | ForEach-Object { Copy-Item $_.FullName dist\ }
+          Get-ChildItem dist | Select-Object Name, Length | Format-Table
+
+      - name: Upload Nova.exe
         uses: actions/upload-artifact@v4
         with:
-          name: nova-windows-nsis-exe
-          path: src-tauri/target/release/bundle/nsis/*.exe
-          if-no-files-found: error
+          name: nova-windows-exe
+          path: dist/Nova.exe
 
-      - name: Upload MSI installer (.msi)
+      - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: nova-windows-msi
-          path: src-tauri/target/release/bundle/msi/*.msi
-          if-no-files-found: warn
-
-      - name: Upload raw Nova.exe
-        uses: actions/upload-artifact@v4
-        with:
-          name: nova-windows-raw-exe
-          path: src-tauri/target/release/Nova.exe
+          name: nova-windows-installer
+          path: dist/Nova-Setup*.exe
           if-no-files-found: warn

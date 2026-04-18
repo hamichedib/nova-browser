@@ -1,0 +1,32 @@
+[package]
+name = "nova"
+version = "0.1.0"
+edition = "2021"
+description = "Nova — modern, sleek browser powered by the Firefox engine"
+authors = ["hamiche"]
+
+[[bin]]
+name = "Nova"
+path = "src/main.rs"
+
+[dependencies]
+ureq = { version = "2.12", default-features = false, features = ["tls", "native-tls"] }
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Console",
+] }
+
+[build-dependencies]
+winres = "0.1"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

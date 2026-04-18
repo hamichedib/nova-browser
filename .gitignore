@@ -1,23 +1,6 @@
-# Rust / Cargo
-src-tauri/target/
-src-tauri/Cargo.lock
-
-# Node
-node_modules/
+target/
 dist/
-.npm/
-
-# Tauri
-src-tauri/gen/schemas/
-
-# OS / editors
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-
-# Build artifacts
 *.exe
-*.msi
-*.AppImage
-*.dmg
+!installer/*.nsi
+node_modules/
+.DS_Store
