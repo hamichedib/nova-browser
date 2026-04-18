@@ -131,6 +131,18 @@ fn apply_layout(app: &AppHandle) {
     }
 }
 
+/// Bring the chrome webview to the top of the Z-order so its buttons
+/// always receive clicks. Tauri doesn't expose SetWindowPos directly, but
+/// toggling visibility off/on is enough to re-raise a child webview on
+/// both Windows (WebView2) and Linux (webkit2gtk).
+fn raise_chrome(app: &AppHandle) {
+    if let Some(chrome) = app.get_webview("chrome") {
+        let _ = chrome.hide();
+        let _ = chrome.show();
+        let _ = chrome.set_focus();
+    }
+}
+
 fn emit_tabs_changed(app: &AppHandle) {
     let state = app.state::<AppState>();
     let tabs = state.tabs.lock().clone();
@@ -167,14 +179,15 @@ fn new_tab(app: AppHandle, url: Option<String>) -> Result<TabInfo, String> {
     // NOTE: we deliberately do NOT call `.auto_resize()` — on Windows
     // WebView2 it causes child webviews to expand to the full window size
     // (covering the chrome toolbar and eating clicks on `+` and `☰`).
-    // We layout all child webviews manually via `apply_layout`, which is
-    // re-invoked on every `WindowEvent::Resized` below.
+    // We layout all child webviews manually via `apply_layout`.
+    let (win_w, win_h) = window_inner_logical(&window);
+    let content_h = (win_h - CHROME_HEIGHT).max(1.0);
     let builder = WebviewBuilder::new(&label, webview_url);
     window
         .add_child(
             builder,
             LogicalPosition::new(0.0, CHROME_HEIGHT),
-            LogicalSize::new(100.0, 100.0),
+            LogicalSize::new(win_w, content_h),
         )
         .map_err(|e| format!("add_child failed: {e}"))?;
 
@@ -185,6 +198,11 @@ fn new_tab(app: AppHandle, url: Option<String>) -> Result<TabInfo, String> {
     }
 
     apply_layout(&app);
+    // On Windows, newly-added child webviews are placed on top of the
+    // Z-order — which would make the tab webview eat clicks on the chrome
+    // toolbar buttons. Bring the chrome webview back to the front after
+    // every tab change.
+    raise_chrome(&app);
     emit_tabs_changed(&app);
 
     Ok(TabInfo {
@@ -215,6 +233,7 @@ fn close_tab(app: AppHandle, tab_id: String) -> Result<(), String> {
     }
 
     apply_layout(&app);
+    raise_chrome(&app);
     emit_tabs_changed(&app);
 
     // If the user closed the last tab, open a fresh one so the window isn't empty.
@@ -234,6 +253,7 @@ fn switch_tab(app: AppHandle, tab_id: String) -> Result<(), String> {
         *state.active_tab.lock() = Some(tab_id);
     }
     apply_layout(&app);
+    raise_chrome(&app);
     emit_tabs_changed(&app);
     Ok(())
 }
@@ -363,19 +383,10 @@ pub fn run() {
                 .resizable(true)
                 .build()?;
 
-            // Add the chrome (UI) webview pinned to the top. No auto_resize —
-            // see `new_tab` for why; we layout manually via apply_layout.
-            let chrome_builder =
-                WebviewBuilder::new("chrome", WebviewUrl::App("index.html".into()));
-            window.add_child(
-                chrome_builder,
-                LogicalPosition::new(0.0, 0.0),
-                LogicalSize::new(1280.0, CHROME_HEIGHT),
-            )?;
-
-            // Create the initial tab right away on the bundled new-tab page,
-            // so even if the chrome UI (JS) fails to boot the user still
-            // sees a beautiful, working landing page.
+            // Create the initial tab FIRST so it's underneath the chrome in
+            // the Z-order on Windows (child webviews are stacked by creation
+            // order; the later one sits on top). The chrome toolbar must be
+            // on top so its buttons receive clicks.
             let initial_label = new_tab_label();
             let tab_builder = WebviewBuilder::new(
                 &initial_label,
@@ -391,6 +402,16 @@ pub fn run() {
                 state.tabs.lock().push(initial_label.clone());
                 *state.active_tab.lock() = Some(initial_label);
             }
+
+            // Now add the chrome (UI) webview on top of the tab.
+            let chrome_builder =
+                WebviewBuilder::new("chrome", WebviewUrl::App("index.html".into()));
+            window.add_child(
+                chrome_builder,
+                LogicalPosition::new(0.0, 0.0),
+                LogicalSize::new(1280.0, CHROME_HEIGHT),
+            )?;
+
             apply_layout(&handle);
 
             // Re-layout child webviews whenever the window changes size.
