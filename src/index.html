@@ -7,27 +7,12 @@
     <link rel="stylesheet" href="chrome.css" />
   </head>
   <body>
-    <!-- Only the slim strip above the tabs is the drag region. Tabs,
-         buttons, and the address bar are all interactive (no drag). -->
-    <div id="drag-strip" class="drag-strip" data-tauri-drag-region></div>
-
     <header class="chrome">
       <div class="tabs-row">
         <div id="tabs" class="tabs"></div>
         <button id="new-tab" class="icon-btn new-tab" title="New tab (Ctrl+T)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
-        <div class="window-controls">
-          <button id="win-min" class="win-btn" title="Minimize">
-            <svg viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          </button>
-          <button id="win-max" class="win-btn" title="Maximize">
-            <svg viewBox="0 0 12 12"><rect x="2.5" y="2.5" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
-          </button>
-          <button id="win-close" class="win-btn close" title="Close">
-            <svg viewBox="0 0 12 12"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          </button>
-        </div>
       </div>
 
       <div class="toolbar">

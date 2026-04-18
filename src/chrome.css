@@ -57,16 +57,6 @@ body {
     var(--bg);
 }
 
-/* Thin strip above the tabs row — only drag region. */
-.drag-strip {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 6px;
-  z-index: 50;
-}
-
 /* Diagnostics badge — tiny, discreet. */
 .diag {
   position: fixed;

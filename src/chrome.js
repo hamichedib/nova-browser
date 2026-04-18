@@ -175,6 +175,28 @@
     }
   }
 
+  async function goHome() {
+    if (!state.activeId) {
+      await newTab();
+      return;
+    }
+    try {
+      const info = await invoke("go_home", { tabId: state.activeId });
+      // Remove the old tab from local state (backend just closed it).
+      state.tabs = state.tabs.filter((t) => t.id !== state.activeId);
+      if (!getTab(info.id)) {
+        state.tabs.push({
+          id: info.id,
+          url: info.url,
+          title: "New tab",
+        });
+      }
+      setActive(info.id);
+    } catch (e) {
+      showError("go_home failed: " + e);
+    }
+  }
+
   async function navigateCurrent(url) {
     if (!state.activeId) {
       await newTab(url);
@@ -224,15 +246,7 @@
     $("reload")?.addEventListener("click", () => {
       if (state.activeId) invoke("reload", { tabId: state.activeId });
     });
-    $("home")?.addEventListener("click", () => {
-      if (state.activeId) navigateCurrent("https://www.google.com/");
-    });
-
-    // Window controls: use backend commands so we don't depend on the
-    // global window JS API (whose path can vary).
-    $("win-min")?.addEventListener("click", () => invoke("win_minimize"));
-    $("win-max")?.addEventListener("click", () => invoke("win_toggle_maximize"));
-    $("win-close")?.addEventListener("click", () => invoke("win_close"));
+    $("home")?.addEventListener("click", goHome);
 
     if (menu) {
       $("menu")?.addEventListener("click", (e) => {
@@ -260,7 +274,7 @@
             if (state.activeId) invoke("reload", { tabId: state.activeId });
             break;
           case "home":
-            if (state.activeId) navigateCurrent("https://www.google.com/");
+            goHome();
             break;
           case "toggle-theme": {
             const root = document.documentElement;

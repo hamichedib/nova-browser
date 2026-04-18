@@ -16,7 +16,8 @@ use tauri::{
 };
 
 const CHROME_HEIGHT: f64 = 96.0;
-const DEFAULT_HOME: &str = "https://www.google.com/";
+/// When a tab is opened without a URL, load the beautiful bundled new-tab page.
+const NEWTAB_ASSET: &str = "newtab.html";
 
 static NEXT_TAB_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -42,7 +43,7 @@ fn new_tab_label() -> String {
 fn resolve_input(input: &str) -> Url {
     let trimmed = input.trim();
     if trimmed.is_empty() {
-        return Url::parse(DEFAULT_HOME).expect("valid");
+        return Url::parse("https://www.google.com/").expect("valid");
     }
     if let Ok(url) = Url::parse(trimmed) {
         if url.scheme() == "http" || url.scheme() == "https" || url.scheme() == "about" {
@@ -119,9 +120,12 @@ fn apply_layout(app: &AppHandle) {
                 let _ = wv.set_position(LogicalPosition::new(0.0, CHROME_HEIGHT));
                 let _ = wv.set_size(LogicalSize::new(w, content_h));
             } else {
-                // Park inactive tabs off-screen; keeps their DOM/JS state alive.
-                let _ = wv.set_position(LogicalPosition::new(-20000.0, -20000.0));
-                let _ = wv.set_size(LogicalSize::new(1.0, 1.0));
+                // Shrink inactive tabs to 0x0 so they're fully hidden while
+                // keeping their DOM/JS state alive. Reliable on both
+                // webkit2gtk (Linux) and WebView2 (Windows); moving a
+                // webview off-screen doesn't hide it on GTK.
+                let _ = wv.set_position(LogicalPosition::new(0.0, CHROME_HEIGHT));
+                let _ = wv.set_size(LogicalSize::new(0.0, 0.0));
             }
         }
     }
@@ -146,12 +150,21 @@ fn new_tab(app: AppHandle, url: Option<String>) -> Result<TabInfo, String> {
         .get_window("main")
         .ok_or_else(|| "main window missing".to_string())?;
     let label = new_tab_label();
-    let target = match url {
-        Some(u) if !u.is_empty() => resolve_input(&u),
-        _ => Url::parse(DEFAULT_HOME).expect("valid"),
+
+    // If no URL was provided, load the bundled elegant new-tab page.
+    let (webview_url, display_url) = match url {
+        Some(u) if !u.is_empty() => {
+            let target = resolve_input(&u);
+            let display = target.to_string();
+            (WebviewUrl::External(target), display)
+        }
+        _ => (
+            WebviewUrl::App(NEWTAB_ASSET.into()),
+            "nova://newtab".to_string(),
+        ),
     };
 
-    let builder = WebviewBuilder::new(&label, WebviewUrl::External(target.clone()));
+    let builder = WebviewBuilder::new(&label, webview_url).auto_resize();
     window
         .add_child(
             builder,
@@ -171,7 +184,7 @@ fn new_tab(app: AppHandle, url: Option<String>) -> Result<TabInfo, String> {
 
     Ok(TabInfo {
         id: label,
-        url: target.to_string(),
+        url: display_url,
     })
 }
 
@@ -228,6 +241,16 @@ fn navigate(app: AppHandle, tab_id: String, url: String) -> Result<String, Strin
     let target = resolve_input(&url);
     wv.navigate(target.clone()).map_err(|e| e.to_string())?;
     Ok(target.to_string())
+}
+
+/// Replace the given tab with a fresh new-tab page. We swap the webview
+/// rather than trying to reconstruct the bundled asset URL (which differs
+/// between Linux and Windows). This gives the user a spotless start page
+/// without leaking history from the previous page.
+#[tauri::command]
+fn go_home(app: AppHandle, tab_id: String) -> Result<TabInfo, String> {
+    close_tab(app.clone(), tab_id)?;
+    new_tab(app, None)
 }
 
 #[tauri::command]
@@ -314,6 +337,7 @@ pub fn run() {
             close_tab,
             switch_tab,
             navigate,
+            go_home,
             go_back,
             go_forward,
             reload,
@@ -336,21 +360,23 @@ pub fn run() {
 
             // Add the chrome (UI) webview pinned to the top.
             let chrome_builder =
-                WebviewBuilder::new("chrome", WebviewUrl::App("index.html".into()));
+                WebviewBuilder::new("chrome", WebviewUrl::App("index.html".into()))
+                    .auto_resize();
             window.add_child(
                 chrome_builder,
                 LogicalPosition::new(0.0, 0.0),
                 LogicalSize::new(1280.0, CHROME_HEIGHT),
             )?;
 
-            // Create the initial tab right away, so even if the chrome UI
-            // (JS) fails to boot the user still sees a working webpage.
+            // Create the initial tab right away on the bundled new-tab page,
+            // so even if the chrome UI (JS) fails to boot the user still
+            // sees a beautiful, working landing page.
             let initial_label = new_tab_label();
-            let home_url = Url::parse(DEFAULT_HOME).expect("valid");
             let tab_builder = WebviewBuilder::new(
                 &initial_label,
-                WebviewUrl::External(home_url),
-            );
+                WebviewUrl::App(NEWTAB_ASSET.into()),
+            )
+            .auto_resize();
             window.add_child(
                 tab_builder,
                 LogicalPosition::new(0.0, CHROME_HEIGHT),
