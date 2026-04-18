@@ -164,7 +164,12 @@ fn new_tab(app: AppHandle, url: Option<String>) -> Result<TabInfo, String> {
         ),
     };
 
-    let builder = WebviewBuilder::new(&label, webview_url).auto_resize();
+    // NOTE: we deliberately do NOT call `.auto_resize()` — on Windows
+    // WebView2 it causes child webviews to expand to the full window size
+    // (covering the chrome toolbar and eating clicks on `+` and `☰`).
+    // We layout all child webviews manually via `apply_layout`, which is
+    // re-invoked on every `WindowEvent::Resized` below.
+    let builder = WebviewBuilder::new(&label, webview_url);
     window
         .add_child(
             builder,
@@ -358,10 +363,10 @@ pub fn run() {
                 .resizable(true)
                 .build()?;
 
-            // Add the chrome (UI) webview pinned to the top.
+            // Add the chrome (UI) webview pinned to the top. No auto_resize —
+            // see `new_tab` for why; we layout manually via apply_layout.
             let chrome_builder =
-                WebviewBuilder::new("chrome", WebviewUrl::App("index.html".into()))
-                    .auto_resize();
+                WebviewBuilder::new("chrome", WebviewUrl::App("index.html".into()));
             window.add_child(
                 chrome_builder,
                 LogicalPosition::new(0.0, 0.0),
@@ -375,8 +380,7 @@ pub fn run() {
             let tab_builder = WebviewBuilder::new(
                 &initial_label,
                 WebviewUrl::App(NEWTAB_ASSET.into()),
-            )
-            .auto_resize();
+            );
             window.add_child(
                 tab_builder,
                 LogicalPosition::new(0.0, CHROME_HEIGHT),
