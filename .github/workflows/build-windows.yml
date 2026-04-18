@@ -38,12 +38,15 @@ jobs:
           Copy-Item launcher\target\x86_64-pc-windows-msvc\release\Nova.exe dist\Nova.exe
           Get-ChildItem dist | Select-Object Name, Length | Format-Table
 
+      - name: Install NSIS
+        shell: pwsh
+        run: choco install nsis -y --no-progress
+
       - name: Build NSIS installer
         shell: pwsh
         run: |
-          # NSIS is pre-installed on windows-latest. Bundle Nova.exe into an
-          # installer that drops it in Program Files and wires up shortcuts.
-          makensis /NOCD installer\Nova.nsi
+          $env:Path += ";C:\Program Files (x86)\NSIS"
+          & "C:\Program Files (x86)\NSIS\makensis.exe" /NOCD installer\Nova.nsi
 
       - name: Stage installer
         shell: pwsh
