@@ -23,8 +23,8 @@ BrandingText "Nova — powered by Firefox"
 ; ---------- UI ----------
 !include "MUI2.nsh"
 !define MUI_ABORTWARNING
-!define MUI_ICON "..\launcher\assets\nova.ico"
-!define MUI_UNICON "..\launcher\assets\nova.ico"
+!define MUI_ICON "launcher\assets\nova.ico"
+!define MUI_UNICON "launcher\assets\nova.ico"
 !define MUI_FINISHPAGE_RUN "$INSTDIR\${APP_EXE}"
 !define MUI_FINISHPAGE_RUN_TEXT "Launch Nova"
 
@@ -41,7 +41,7 @@ Section "Nova" SecNova
   SectionIn RO
   SetOutPath "$INSTDIR"
   File "dist\Nova.exe"
-  File "..\launcher\assets\nova.ico"
+  File "launcher\assets\nova.ico"
 
   ; Start menu shortcut
   CreateDirectory "$SMPROGRAMS\Nova"
