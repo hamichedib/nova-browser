@@ -157,7 +157,9 @@ fn raise_chrome(app: &AppHandle) {
             };
             let controller = platform_webview.controller();
             let mut parent_hwnd = HWND(std::ptr::null_mut());
-            if controller.ParentWindow(&mut parent_hwnd).is_ok()
+            if controller
+                .ParentWindow(&mut parent_hwnd as *mut HWND)
+                .is_ok()
                 && !parent_hwnd.0.is_null()
             {
                 let _ = SetWindowPos(
