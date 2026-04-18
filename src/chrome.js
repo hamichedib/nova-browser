@@ -32,6 +32,11 @@
     }
     box.textContent = (box.textContent ? box.textContent + "\n" : "") + String(msg);
   }
+  function setDiag(text) {
+    const d = document.getElementById("diag");
+    if (d) d.textContent = text;
+  }
+  setDiag("chrome.js");
   window.addEventListener("error", (e) =>
     showError("JS error: " + (e.error?.stack || e.message || e))
   );
@@ -346,10 +351,14 @@
       );
     }
 
+    setDiag("wired");
     // Tell the backend we're ready — it will create the initial tab.
-    invoke("chrome_ready").catch((e) =>
-      showError("chrome_ready invoke failed: " + e)
-    );
+    invoke("chrome_ready")
+      .then(() => setDiag("ready"))
+      .catch((e) => {
+        setDiag("invoke failed");
+        showError("chrome_ready invoke failed: " + e);
+      });
   }
 
   if (document.readyState === "loading") {

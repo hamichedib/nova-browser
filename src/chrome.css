@@ -57,6 +57,32 @@ body {
     var(--bg);
 }
 
+/* Thin strip above the tabs row — only drag region. */
+.drag-strip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  z-index: 50;
+}
+
+/* Diagnostics badge — tiny, discreet. */
+.diag {
+  position: fixed;
+  right: 8px;
+  bottom: 6px;
+  z-index: 100;
+  font: 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--fg-dim);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  padding: 3px 7px;
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
 .chrome {
   position: fixed;
   inset: 0 0 auto 0;
