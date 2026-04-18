@@ -8,7 +8,7 @@
 !define APP_VERSION "0.1.0"
 !define APP_PUBLISHER "Nova"
 !define APP_EXE "Nova.exe"
-!define OUTFILE "..\dist\Nova-Setup-${APP_VERSION}.exe"
+!define OUTFILE "dist\Nova-Setup-${APP_VERSION}.exe"
 
 Unicode true
 SetCompressor /SOLID lzma
@@ -36,7 +36,7 @@ BrandingText "Nova — powered by Firefox"
 Section "Nova" SecNova
   SectionIn RO
   SetOutPath "$INSTDIR"
-  File "..\dist\Nova.exe"
+  File "dist\Nova.exe"
 
   ; Start menu shortcut
   CreateDirectory "$SMPROGRAMS\Nova"

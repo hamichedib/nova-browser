@@ -51,7 +51,6 @@ jobs:
       - name: Stage installer
         shell: pwsh
         run: |
-          Get-ChildItem installer\*.exe | ForEach-Object { Copy-Item $_.FullName dist\ }
           Get-ChildItem dist | Select-Object Name, Length | Format-Table
 
       - name: Upload Nova.exe
