@@ -262,6 +262,35 @@ fn list_tabs(app: AppHandle) -> (Vec<String>, Option<String>) {
     (tabs, active)
 }
 
+#[tauri::command]
+fn win_minimize(app: AppHandle) -> Result<(), String> {
+    if let Some(w) = app.get_window("main") {
+        w.minimize().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn win_toggle_maximize(app: AppHandle) -> Result<(), String> {
+    if let Some(w) = app.get_window("main") {
+        let maximized = w.is_maximized().unwrap_or(false);
+        if maximized {
+            w.unmaximize().map_err(|e| e.to_string())?;
+        } else {
+            w.maximize().map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn win_close(app: AppHandle) -> Result<(), String> {
+    if let Some(w) = app.get_window("main") {
+        w.close().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 /// Called by the chrome UI once it has finished booting. Ensures there's at
 /// least one tab open and triggers a layout pass.
 #[tauri::command]
@@ -290,6 +319,9 @@ pub fn run() {
             reload,
             list_tabs,
             chrome_ready,
+            win_minimize,
+            win_toggle_maximize,
+            win_close,
         ])
         .setup(|app| {
             let handle = app.handle().clone();
@@ -310,6 +342,26 @@ pub fn run() {
                 LogicalPosition::new(0.0, 0.0),
                 LogicalSize::new(1280.0, CHROME_HEIGHT),
             )?;
+
+            // Create the initial tab right away, so even if the chrome UI
+            // (JS) fails to boot the user still sees a working webpage.
+            let initial_label = new_tab_label();
+            let home_url = Url::parse(DEFAULT_HOME).expect("valid");
+            let tab_builder = WebviewBuilder::new(
+                &initial_label,
+                WebviewUrl::External(home_url),
+            );
+            window.add_child(
+                tab_builder,
+                LogicalPosition::new(0.0, CHROME_HEIGHT),
+                LogicalSize::new(1280.0, 800.0 - CHROME_HEIGHT),
+            )?;
+            {
+                let state = handle.state::<AppState>();
+                state.tabs.lock().push(initial_label.clone());
+                *state.active_tab.lock() = Some(initial_label);
+            }
+            apply_layout(&handle);
 
             // Re-layout child webviews whenever the window changes size.
             let resize_handle = handle.clone();
