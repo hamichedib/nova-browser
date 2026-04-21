@@ -130,12 +130,28 @@ app.on('web-contents-created', (_event, contents) => {
   }
 });
 
+// Client Hints that match a real Chrome 124 install — these are what Google
+// actually checks to detect Electron; overriding User-Agent alone is NOT enough.
+const CHROME_CH_UA         = '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"';
+const CHROME_CH_UA_MOBILE  = '?0';
+const CHROME_CH_UA_PLATFORM = '"Windows"';
+
 function applyChromeUA(ses) {
   try { ses.setUserAgent(CHROME_UA); } catch (_) { /* noop */ }
   ses.webRequest.onBeforeSendHeaders((details, cb) => {
     const headers = details.requestHeaders;
     headers['User-Agent'] = CHROME_UA;
-    // Kill any header that would leak Electron/DIB-HAMICHE to Google.
+    // Kill headers Google uses to sniff embedded browsers.
+    if ('Sec-Ch-Ua'          in headers) headers['Sec-Ch-Ua']          = CHROME_CH_UA;
+    if ('sec-ch-ua'          in headers) headers['sec-ch-ua']          = CHROME_CH_UA;
+    if ('Sec-Ch-Ua-Mobile'   in headers) headers['Sec-Ch-Ua-Mobile']   = CHROME_CH_UA_MOBILE;
+    if ('sec-ch-ua-mobile'   in headers) headers['sec-ch-ua-mobile']   = CHROME_CH_UA_MOBILE;
+    if ('Sec-Ch-Ua-Platform' in headers) headers['Sec-Ch-Ua-Platform'] = CHROME_CH_UA_PLATFORM;
+    if ('sec-ch-ua-platform' in headers) headers['sec-ch-ua-platform'] = CHROME_CH_UA_PLATFORM;
+    // Always inject canonical ones (in case Electron didn't send them).
+    headers['Sec-Ch-Ua']          = CHROME_CH_UA;
+    headers['Sec-Ch-Ua-Mobile']   = CHROME_CH_UA_MOBILE;
+    headers['Sec-Ch-Ua-Platform'] = CHROME_CH_UA_PLATFORM;
     delete headers['X-Electron-Version'];
     cb({ requestHeaders: headers });
   });
