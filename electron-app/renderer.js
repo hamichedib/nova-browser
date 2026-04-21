@@ -6,10 +6,12 @@
    bookmarks, history, shortcuts (GLM 5.1, YouTube, Google).
    ======================================================= */
 
-// Firefox UA — Google's embedded-browser block targets Chromium Client Hints,
-// which Firefox doesn't send. This is the same UA applied at the session layer
-// in main.js (app.userAgentFallback).
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0';
+// Chrome 124 UA, matching what main.js applies at the session layer.
+const UA = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    'AppleWebKit/537.36 (KHTML, like Gecko)',
+    'Chrome/124.0.0.0 Safari/537.36',
+].join(' ');
 
 const SEARCH_ENGINES = {
     google:     { name: 'Google',     url: (q) => `https://www.google.com/search?q=${encodeURIComponent(q)}` },
@@ -108,10 +110,11 @@ function wireToolbar() {
 
     $('#btnGLM').onclick     = () => createTab('https://chat.z.ai/');
     $('#btnYouTube').onclick = () => createTab('https://www.youtube.com/');
-    // With Client-Hint spoofing and navigator spoofing applied by preload-webview.js,
-    // Google sign-in now works inline inside DIB HAMICHE.
+    // Google blocks <webview> sign-in. We open it in a dedicated top-level
+    // BrowserWindow that shares the same persist:main session, so cookies land
+    // in the main browser and Gmail/YouTube work inline after the popup closes.
     $('#btnGoogleLogin').onclick = () =>
-        createTab('https://accounts.google.com/ServiceLogin?hl=en&continue=https://myaccount.google.com');
+        window.dib.auth.openLogin('https://accounts.google.com/ServiceLogin?hl=en&continue=https://myaccount.google.com');
     $('#btnOpenExternal').onclick = () => {
         const t = currentTab();
         if (t && t.url && /^https?:/i.test(t.url)) window.dib.app.openExternal(t.url);
@@ -179,6 +182,9 @@ function createTab(url) {
     wv.setAttribute('useragent', UA);
     wv.setAttribute('allowpopups', '');
     wv.setAttribute('webpreferences', 'contextIsolation=yes, nodeIntegration=no');
+    // Share the 'persist:main' session with the Google-login BrowserWindow so
+    // cookies set during sign-in apply to every tab afterwards.
+    wv.setAttribute('partition', 'persist:main');
     if (window.dibPreloadPath) wv.setAttribute('preload', window.dibPreloadPath);
     wv.src = resolveUrl(url);
     $('#viewport').appendChild(wv);

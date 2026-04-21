@@ -9,44 +9,52 @@
 const { contextBridge, ipcRenderer, webFrame } = require('electron');
 
 /* === anti-detection (runs everywhere, incl. http/https pages) ===
-   We claim to be Firefox, so remove every Chromium-specific fingerprint:
-   - delete window.chrome (Firefox doesn't have it)
-   - delete navigator.userAgentData (Firefox doesn't have it)
-   - force navigator.webdriver = false
-   - hide any Electron trace on navigator */
-(function spoofFirefox() {
+   Make Chromium-on-Electron look like real Chrome. Google mainly checks
+   navigator.webdriver; the rest are defence-in-depth. */
+(function spoofChrome() {
     const script = `(function() {
         try {
             Object.defineProperty(navigator, 'webdriver', { get: () => false, configurable: true });
-            try { delete window.chrome; } catch (_) {
-                try { window.chrome = undefined; } catch (__) {}
-            }
-            try { delete Navigator.prototype.userAgentData; } catch (_) {}
+
+            const brands = [
+                { brand: 'Chromium',      version: '124' },
+                { brand: 'Google Chrome', version: '124' },
+                { brand: 'Not-A.Brand',   version: '99'  },
+            ];
+            const uaData = {
+                brands,
+                mobile: false,
+                platform: 'Windows',
+                getHighEntropyValues: () => Promise.resolve({
+                    brands,
+                    mobile: false,
+                    platform: 'Windows',
+                    platformVersion: '10.0.0',
+                    architecture: 'x86',
+                    bitness: '64',
+                    model: '',
+                    uaFullVersion: '124.0.0.0',
+                    fullVersionList: brands.map(b => ({ ...b, version: b.brand === 'Not-A.Brand' ? '99.0.0.0' : '124.0.0.0' })),
+                    wow64: false,
+                }),
+                toJSON: () => ({ brands, mobile: false, platform: 'Windows' }),
+            };
             try {
                 Object.defineProperty(navigator, 'userAgentData', {
-                    get: () => undefined, configurable: true,
+                    get: () => uaData, configurable: true,
                 });
             } catch (_) {}
-            // Firefox exposes navigator.oscpu on Windows.
+
+            if (!window.chrome) window.chrome = {};
+            if (!window.chrome.runtime) window.chrome.runtime = {};
+            if (!window.chrome.loadTimes) window.chrome.loadTimes = () =>
+                ({ requestTime: Date.now() / 1000, startLoadTime: Date.now() / 1000 });
+            if (!window.chrome.csi) window.chrome.csi = () =>
+                ({ startE: Date.now(), onloadT: Date.now(), pageT: 0, tran: 15 });
+
             try {
-                Object.defineProperty(navigator, 'oscpu', {
-                    get: () => 'Windows NT 10.0; Win64; x64', configurable: true,
-                });
-            } catch (_) {}
-            // navigator.buildID is a well-known Firefox-only property.
-            try {
-                Object.defineProperty(navigator, 'buildID', {
-                    get: () => '20181001000000', configurable: true,
-                });
-            } catch (_) {}
-            try {
-                Object.defineProperty(navigator, 'productSub', {
-                    get: () => '20100101', configurable: true,
-                });
-            } catch (_) {}
-            try {
-                Object.defineProperty(navigator, 'vendor', {
-                    get: () => '', configurable: true,
+                Object.defineProperty(navigator, 'plugins', {
+                    get: () => [1, 2, 3, 4, 5].map(i => ({ name: 'Plugin ' + i })),
                 });
             } catch (_) {}
         } catch (e) { /* swallow */ }

@@ -19,11 +19,13 @@ app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
 
 const APP_NAME = 'DIB HAMICHE';
 
-// Claim to be Firefox 124 on Windows. Google's "embedded browser" detector
-// primarily targets Chromium-based webviews (via Client Hints). Firefox
-// doesn't send Sec-Ch-Ua at all, so sign-in works inline more reliably.
+// Real Chrome 124 UA (no "Electron/…" token). Google sign-in is served in a
+// dedicated top-level BrowserWindow (see `auth:open-login` IPC below), which
+// bypasses the embedded-browser check even with Chrome UA.
 const CHROME_UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0';
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ' +
+  'AppleWebKit/537.36 (KHTML, like Gecko) ' +
+  'Chrome/124.0.0.0 Safari/537.36';
 app.userAgentFallback = CHROME_UA;
 const USER_DATA_ROOT = path.join(app.getPath('userData'), 'dib-hamiche');
 fs.mkdirSync(USER_DATA_ROOT, { recursive: true });
@@ -152,6 +154,7 @@ app.whenReady().then(() => {
   // Register dib:// protocol for internal pages (newtab, settings, ...)
   const ses = session.defaultSession;
   applyChromeUA(ses);
+  applyChromeUA(session.fromPartition('persist:main'));
 
   ses.protocol.registerFileProtocol('dib', (request, callback) => {
     const url = request.url.replace(/^dib:\/\//, '').replace(/\/$/, '');
@@ -276,6 +279,49 @@ ipcMain.handle('window:toggle-fullscreen', () => {
 ipcMain.handle('app:version', () => app.getVersion());
 ipcMain.handle('app:name', () => APP_NAME);
 ipcMain.handle('app:open-external', (_e, url) => shell.openExternal(url));
+
+// Open Google sign-in (or any URL) in a dedicated top-level BrowserWindow
+// that shares the app's default session. Because it's a real top-level
+// Chromium window — not a <webview> — Google's "embedded browser" check
+// does NOT trigger, and the resulting cookies persist in DIB HAMICHE so
+// Gmail/YouTube stay signed-in inside the main window.
+ipcMain.handle('auth:open-login', (_e, url) => {
+  const parent = BrowserWindow.getFocusedWindow() || mainWindow;
+  const loginWin = new BrowserWindow({
+    width: 520,
+    height: 720,
+    parent,
+    modal: false,
+    title: 'Sign in',
+    backgroundColor: '#ffffff',
+    autoHideMenuBar: true,
+    icon: path.join(__dirname, 'assets', 'icon.png'),
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      partition: 'persist:main',
+    },
+  });
+  loginWin.setMenu(null);
+  loginWin.loadURL(url || 'https://accounts.google.com/ServiceLogin?hl=en');
+
+  // Auto-close once the user lands on their account / Gmail / YouTube.
+  const autoClose = (ev, navUrl) => {
+    try {
+      const u = new URL(navUrl);
+      if (
+        /myaccount\.google\.com|mail\.google\.com|youtube\.com\/?$/i.test(
+          u.origin + u.pathname,
+        )
+      ) {
+        loginWin.close();
+      }
+    } catch (_) { /* ignore */ }
+  };
+  loginWin.webContents.on('did-navigate', autoClose);
+  loginWin.webContents.on('did-navigate-in-page', autoClose);
+});
 ipcMain.handle('app:open-downloads-folder', () => shell.openPath(DOWNLOADS_DIR));
 
 ipcMain.handle('app:check-updates', async () => {

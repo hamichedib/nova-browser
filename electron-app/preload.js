@@ -41,6 +41,9 @@ contextBridge.exposeInMainWorld('dib', {
     checkUpdates: () => ipcRenderer.invoke('app:check-updates'),
     info: (title, message) => ipcRenderer.invoke('dialog:info', { title, message }),
   },
+  auth: {
+    openLogin: (url) => ipcRenderer.invoke('auth:open-login', url),
+  },
   events: {
     onOpenNewTab: (cb) => ipcRenderer.on('open-new-tab', (_e, url) => cb(url)),
     onDownloadUpdate: (cb) => ipcRenderer.on('download-update', () => cb()),
