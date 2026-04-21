@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>History — DIB HAMICHE</title>
+<link rel="stylesheet" href="_shared.css" />
+</head>
+<body>
+<div class="header">
+    <div class="logo">D</div>
+    <div><div class="name">DIB HAMICHE</div><div class="nova">NOVA PRO · HISTORY</div></div>
+</div>
+<div class="page">
+    <h1>🕓 <span class="accent">History</span></h1>
+    <div class="sub">Recently visited pages (kept locally).</div>
+    <div class="row" style="margin-bottom:16px">
+        <input id="q" placeholder="Filter by URL or title…" />
+        <button class="btn danger" onclick="clearAll()">Clear all history</button>
+    </div>
+    <div class="card">
+        <table>
+            <thead><tr><th>Title</th><th>URL</th><th>Visited</th></tr></thead>
+            <tbody id="rows"></tbody>
+        </table>
+    </div>
+</div>
+<script>
+    let data = [];
+    function render(filter = '') {
+        const f = filter.toLowerCase();
+        const body = document.getElementById('rows');
+        const rows = data.filter(h =>
+            (h.url || '').toLowerCase().includes(f) ||
+            (h.title || '').toLowerCase().includes(f));
+        if (!rows.length) {
+            body.innerHTML = '<tr><td colspan="3" class="small">No history.</td></tr>';
+            return;
+        }
+        body.innerHTML = rows.slice(0, 500).map(h => `
+            <tr>
+              <td>${(h.title || '—').replace(/</g,'&lt;')}</td>
+              <td class="small"><a href="${h.url}">${h.url}</a></td>
+              <td class="small">${new Date(h.at).toLocaleString('fr-DZ')}</td>
+            </tr>`).join('');
+    }
+    async function load() {
+        const s = await window.dib.store.get();
+        data = s.history || [];
+        render();
+    }
+    async function clearAll() {
+        const s = await window.dib.store.get();
+        s.history = [];
+        await window.dib.store.set(s);
+        load();
+    }
+    document.getElementById('q').addEventListener('input', e => render(e.target.value));
+    load();
+</script>
+</body>
+</html>

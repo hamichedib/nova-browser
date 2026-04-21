@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Updates — DIB HAMICHE</title>
+<link rel="stylesheet" href="_shared.css" />
+</head>
+<body>
+<div class="header">
+    <div class="logo">D</div>
+    <div><div class="name">DIB HAMICHE</div><div class="nova">NOVA PRO · UPDATES</div></div>
+</div>
+<div class="page">
+    <h1>🔄 <span class="accent">Updates</span></h1>
+    <div class="sub">Keep DIB HAMICHE up to date.</div>
+    <div class="card">
+        <div class="row">
+            <div class="col"><label>Current version</label><div id="ver">…</div></div>
+            <div class="col"><label>Latest known</label><div id="latest">—</div></div>
+            <div class="col"><label>Last checked</label><div id="when" class="small">—</div></div>
+        </div>
+        <div class="row" style="margin-top:16px">
+            <button class="btn" onclick="check()">Check for updates</button>
+            <button class="btn secondary"
+                    onclick="window.dib.app.openExternal('https://github.com/hamichedib/nova-browser/releases')">
+                Open release page
+            </button>
+        </div>
+        <p id="msg" class="small" style="margin-top:14px"></p>
+    </div>
+    <div class="card">
+        <h3>Release notes (local)</h3>
+        <ul class="small">
+            <li><strong>1.0.0</strong> — First public build: multi-tab, Algiers clock, GLM 5.1 shortcut,
+                bookmarks / history / downloads / passwords pages, Windows installer.</li>
+        </ul>
+    </div>
+</div>
+<script>
+    async function boot() {
+        document.getElementById('ver').textContent = await window.dib.app.version();
+    }
+    async function check() {
+        const r = await window.dib.app.checkUpdates();
+        document.getElementById('latest').textContent = r.latest;
+        document.getElementById('when').textContent   = new Date(r.checkedAt).toLocaleString('fr-DZ');
+        document.getElementById('msg').textContent    = r.message;
+    }
+    boot();
+</script>
+</body>
+</html>

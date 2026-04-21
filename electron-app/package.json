@@ -1,0 +1,57 @@
+{
+  "name": "dib-hamiche-browser",
+  "productName": "DIB HAMICHE",
+  "version": "1.0.0",
+  "author": "DIB HAMICHE",
+  "description": "DIB HAMICHE Nova Pro - Modern, elegant, fast browser with GLM 5.1, multi-engine search, Algeria clock, and full browser features.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win --x64",
+    "build:win:portable": "electron-builder --win portable --x64"
+  },
+  "build": {
+    "appId": "com.dibhamiche.novapro",
+    "productName": "DIB HAMICHE",
+    "copyright": "Copyright © 2025 DIB HAMICHE",
+    "asar": true,
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "renderer.js",
+      "styles.css",
+      "pages/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "artifactName": "DIB-HAMICHE-Setup-${version}.${ext}",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "DIB HAMICHE",
+      "runAfterFinish": true
+    },
+    "portable": {
+      "artifactName": "DIB-HAMICHE-Portable-${version}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3"
+  }
+}

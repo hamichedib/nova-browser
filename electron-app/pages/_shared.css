@@ -1,0 +1,59 @@
+:root {
+    --nova: #00d4ff;
+    --nova-soft: #00d4ff33;
+    --bg: #05050a;
+    --bg-2: #0c0c14;
+    --bg-3: #151520;
+    --fg: #e9eef5;
+    --muted: #8994a5;
+    --border: #1f2030;
+    --danger: #ff3b5c;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+             font-family: "Segoe UI", "Cairo", system-ui, sans-serif; min-height: 100vh; }
+a { color: var(--nova); text-decoration: none; }
+.page {
+    max-width: 1100px; margin: 0 auto; padding: 40px 28px;
+}
+.page h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: 0.3px; }
+.page h1 .accent { color: var(--nova); }
+.page .sub { color: var(--muted); margin-bottom: 28px; font-size: 14px; }
+.card {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 22px; margin-bottom: 16px;
+}
+.btn {
+    background: var(--nova); color: #04111a; border: none;
+    padding: 10px 18px; border-radius: 22px;
+    font-weight: 700; cursor: pointer; transition: 0.2s;
+}
+.btn.secondary { background: #1b1d2b; color: var(--fg); }
+.btn.danger { background: var(--danger); color: #fff; }
+.btn:hover { filter: brightness(1.08); }
+.row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.col { flex: 1; min-width: 220px; }
+label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+input, select, textarea {
+    width: 100%; background: #0e0f1a; color: var(--fg);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; font-size: 14px; outline: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--nova); box-shadow: 0 0 0 3px var(--nova-soft); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; }
+th { color: var(--muted); font-weight: 600; }
+.small { font-size: 12px; color: var(--muted); }
+.pill { display: inline-block; padding: 3px 10px; border-radius: 999px;
+        background: #101224; color: var(--nova); font-size: 11px; border: 1px solid #1e2136; }
+.header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 28px; border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #06060c, #09091a);
+}
+.header .logo { width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--nova), #0078d7);
+    display: flex; align-items: center; justify-content: center;
+    color: #04111a; font-weight: 900; font-size: 18px; }
+.header .name { font-weight: 800; letter-spacing: 0.4px; }
+.header .nova { color: var(--nova); font-size: 11px; letter-spacing: 2px; }

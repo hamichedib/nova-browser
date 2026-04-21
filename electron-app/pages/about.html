@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>About — DIB HAMICHE</title>
+<link rel="stylesheet" href="_shared.css" />
+</head>
+<body>
+<div class="header">
+    <div class="logo">D</div>
+    <div><div class="name">DIB HAMICHE</div><div class="nova">NOVA PRO · ABOUT</div></div>
+</div>
+<div class="page">
+    <h1>ⓘ <span class="accent">About DIB HAMICHE</span></h1>
+    <div class="card">
+        <p><strong>DIB HAMICHE — NOVA PRO</strong> is a modern, elegant, fast browser
+           built on the Chromium (Electron) engine, customized for Algeria with a live
+           <code>Africa/Algiers</code> clock, multi-engine search, GLM 5.1 AI shortcut,
+           and full browser features (tabs, bookmarks, history, downloads, passwords,
+           languages, updates).</p>
+        <ul>
+            <li>Product: DIB HAMICHE</li>
+            <li>Codename: Nova Pro</li>
+            <li>Engine: Chromium via Electron</li>
+            <li>Version: <span id="ver">…</span></li>
+            <li>Platform: Windows x64 (installer + portable)</li>
+        </ul>
+        <a class="btn" href="dib://newtab">Back to home</a>
+    </div>
+</div>
+<script>
+    window.dib.app.version().then(v => document.getElementById('ver').textContent = v);
+</script>
+</body>
+</html>

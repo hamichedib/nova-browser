@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Bookmarks — DIB HAMICHE</title>
+<link rel="stylesheet" href="_shared.css" />
+</head>
+<body>
+<div class="header">
+    <div class="logo">D</div>
+    <div><div class="name">DIB HAMICHE</div><div class="nova">NOVA PRO · BOOKMARKS</div></div>
+</div>
+<div class="page">
+    <h1>★ <span class="accent">Bookmarks</span></h1>
+    <div class="sub">Save and manage your favorite sites.</div>
+    <div class="card">
+        <h3>Add bookmark</h3>
+        <div class="row">
+            <div class="col"><label>Title</label><input id="t" placeholder="My site"></div>
+            <div class="col"><label>URL</label><input id="u" placeholder="https://…"></div>
+            <div><button class="btn" onclick="add()">Add</button></div>
+        </div>
+    </div>
+    <div class="card">
+        <table>
+            <thead><tr><th>Title</th><th>URL</th><th></th></tr></thead>
+            <tbody id="rows"></tbody>
+        </table>
+    </div>
+</div>
+<script>
+    async function load() {
+        const s = await window.dib.store.get();
+        const body = document.getElementById('rows');
+        if (!s.bookmarks.length) {
+            body.innerHTML = '<tr><td colspan="3" class="small">No bookmarks yet.</td></tr>';
+            return;
+        }
+        body.innerHTML = s.bookmarks.map(b => `
+            <tr>
+              <td>${(b.title || b.url).replace(/</g,'&lt;')}</td>
+              <td class="small"><a href="${b.url}">${b.url}</a></td>
+              <td><button class="btn danger" data-u="${b.url}">Remove</button></td>
+            </tr>`).join('');
+        body.querySelectorAll('button[data-u]').forEach(btn =>
+            btn.onclick = () => window.dib.bookmarks.remove(btn.dataset.u).then(load));
+    }
+    async function add() {
+        const title = document.getElementById('t').value.trim();
+        const url   = document.getElementById('u').value.trim();
+        if (!url) return;
+        await window.dib.bookmarks.add({ title: title || url, url });
+        document.getElementById('t').value = '';
+        document.getElementById('u').value = '';
+        load();
+    }
+    load();
+</script>
+</body>
+</html>
