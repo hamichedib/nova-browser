@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>DIB HAMICHE — Home</title>
+<link rel="stylesheet" href="_shared.css" />
+<style>
+    body { background: radial-gradient(60% 80% at 50% 0%, #0a1f2d 0%, #05050a 55%); }
+    .hero { text-align: center; padding: 70px 20px 30px; }
+    .hero .logo-big {
+        width: 92px; height: 92px; margin: 0 auto 18px;
+        border-radius: 22px;
+        background: linear-gradient(135deg, #00d4ff, #0078d7);
+        display: flex; align-items: center; justify-content: center;
+        color: #04111a; font-size: 46px; font-weight: 900;
+        box-shadow: 0 0 40px rgba(0, 212, 255, 0.35);
+    }
+    .hero h1 { font-size: 44px; margin: 0; letter-spacing: 2px; }
+    .hero h1 .accent { color: #00d4ff; }
+    .hero .tag { color: #8994a5; font-size: 14px; margin-top: 8px; letter-spacing: 2px; }
+    .clock-hero {
+        margin: 24px auto; display: inline-flex; flex-direction: column; align-items: center;
+        padding: 14px 36px; border: 1px solid #1f2030;
+        border-radius: 16px; background: #0b0c17;
+    }
+    .clock-hero .time { font-family: Consolas, monospace; font-size: 46px;
+                        color: #00d4ff; text-shadow: 0 0 18px rgba(0, 212, 255, 0.45); }
+    .clock-hero .date { color: #b3bccb; font-size: 14px; letter-spacing: 1px; }
+    .clock-hero .tz { color: #8994a5; font-size: 11px; margin-top: 6px; letter-spacing: 2px; }
+
+    .search-wrap { max-width: 720px; margin: 12px auto 24px; padding: 0 20px; }
+    .search-box { display: flex; background: #0c0c16; border: 1px solid #1f2033;
+                  border-radius: 28px; padding: 6px; }
+    .search-box input { border: none; background: transparent; flex: 1; padding: 14px 16px;
+                        color: #fff; font-size: 15px; }
+    .search-box select { border: none; background: transparent; color: #00d4ff;
+                         font-weight: 700; outline: none; cursor: pointer; }
+    .search-box select option { background: #0c0c16; color: #fff; }
+    .search-box button { background: #00d4ff; color: #04111a; border: none;
+                         border-radius: 20px; padding: 0 20px; font-weight: 800; cursor: pointer; }
+
+    .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+             gap: 14px; max-width: 920px; margin: 30px auto; padding: 0 20px; }
+    .tile {
+        background: #0c0c17; border: 1px solid #1d1f33; border-radius: 14px;
+        padding: 16px 10px; text-align: center; cursor: pointer;
+        transition: 0.2s; color: #d5dce7;
+    }
+    .tile:hover { border-color: #00d4ff; transform: translateY(-2px); color: #00d4ff;
+                  box-shadow: 0 12px 28px rgba(0, 212, 255, 0.15); }
+    .tile .ico { font-size: 26px; margin-bottom: 6px; }
+    .tile .lbl { font-size: 12px; letter-spacing: 0.3px; }
+
+    .footer-note { text-align: center; color: #555d6d; font-size: 11px; padding: 20px;
+                   letter-spacing: 3px; }
+</style>
+</head>
+<body>
+<div class="hero">
+    <div class="logo-big">D</div>
+    <h1><span class="accent">DIB</span> HAMICHE</h1>
+    <div class="tag">NOVA&nbsp;PRO&nbsp;·&nbsp;Fast&nbsp;·&nbsp;Private&nbsp;·&nbsp;Elegant</div>
+    <div class="clock-hero">
+        <div class="time" id="time">00:00:00</div>
+        <div class="date" id="date">---</div>
+        <div class="tz">ALGIERS · AFRICA/ALGIERS · UTC+1</div>
+    </div>
+</div>
+
+<div class="search-wrap">
+    <form class="search-box" id="searchForm" onsubmit="return doSearch(event)">
+        <select id="engine">
+            <option value="google">Google</option>
+            <option value="bing">Bing</option>
+            <option value="duckduckgo">DuckDuckGo</option>
+            <option value="brave">Brave</option>
+            <option value="yandex">Yandex</option>
+            <option value="ecosia">Ecosia</option>
+        </select>
+        <input id="q" placeholder="Search the web · Rechercher sur le web · ابحث في الويب" autocomplete="off" />
+        <button type="submit">Search</button>
+    </form>
+</div>
+
+<div class="tiles" id="tiles"></div>
+
+<div class="footer-note">DIB HAMICHE · NOVA PRO · DESIGNED FOR ALGERIA</div>
+
+<script>
+    const SHORTCUTS = [
+        { ico: '★',  lbl: 'GLM 5.1',         url: 'https://chat.z.ai/' },
+        { ico: '▶',  lbl: 'YouTube',         url: 'https://www.youtube.com' },
+        { ico: 'G',  lbl: 'Google',          url: 'https://www.google.com' },
+        { ico: '@',  lbl: 'Gmail',           url: 'https://mail.google.com' },
+        { ico: '🗺', lbl: 'Maps',             url: 'https://www.google.com/maps' },
+        { ico: '📰', lbl: 'News',             url: 'https://news.google.com' },
+        { ico: '🎵', lbl: 'Music',            url: 'https://music.youtube.com' },
+        { ico: 'GH', lbl: 'GitHub',          url: 'https://github.com' },
+        { ico: 'FB', lbl: 'Facebook',        url: 'https://www.facebook.com' },
+        { ico: '𝕏',  lbl: 'X (Twitter)',     url: 'https://x.com' },
+        { ico: 'IG', lbl: 'Instagram',       url: 'https://www.instagram.com' },
+        { ico: 'WA', lbl: 'WhatsApp',        url: 'https://web.whatsapp.com' },
+        { ico: '✈',  lbl: 'Translate',       url: 'https://translate.google.com' },
+        { ico: '💬', lbl: 'ChatGPT',         url: 'https://chat.openai.com' },
+    ];
+
+    function render() {
+        const tiles = document.getElementById('tiles');
+        tiles.innerHTML = SHORTCUTS.map(s =>
+            `<div class="tile" onclick="location.href='${s.url}'">
+                <div class="ico">${s.ico}</div>
+                <div class="lbl">${s.lbl}</div>
+             </div>`
+        ).join('');
+    }
+
+    function doSearch(e) {
+        e.preventDefault();
+        const q = document.getElementById('q').value.trim();
+        if (!q) return false;
+        const eng = document.getElementById('engine').value;
+        const urls = {
+            google:     'https://www.google.com/search?q=',
+            bing:       'https://www.bing.com/search?q=',
+            duckduckgo: 'https://duckduckgo.com/?q=',
+            brave:      'https://search.brave.com/search?q=',
+            yandex:     'https://yandex.com/search/?text=',
+            ecosia:     'https://www.ecosia.org/search?q=',
+        };
+        location.href = (urls[eng] || urls.google) + encodeURIComponent(q);
+        return false;
+    }
+
+    function tick() {
+        const now = new Date();
+        const opts = { timeZone: 'Africa/Algiers', hour12: false };
+        document.getElementById('time').textContent = new Intl.DateTimeFormat('fr-DZ',
+            { ...opts, hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(now);
+        document.getElementById('date').textContent = new Intl.DateTimeFormat('fr-DZ',
+            { ...opts, weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).format(now);
+    }
+    render(); tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>

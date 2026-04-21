@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Downloads — DIB HAMICHE</title>
+<link rel="stylesheet" href="_shared.css" />
+</head>
+<body>
+<div class="header">
+    <div class="logo">D</div>
+    <div><div class="name">DIB HAMICHE</div><div class="nova">NOVA PRO · DOWNLOADS</div></div>
+</div>
+<div class="page">
+    <h1>⬇ <span class="accent">Downloads</span></h1>
+    <div class="sub">Files saved to <code>~/Downloads/DIB-HAMICHE</code></div>
+    <div class="row" style="margin-bottom:16px">
+        <button class="btn" onclick="window.dib.app.openDownloadsFolder()">Open folder</button>
+        <button class="btn secondary" onclick="load()">Refresh</button>
+        <button class="btn danger" onclick="clearAll()">Clear list</button>
+    </div>
+    <div class="card">
+        <table>
+            <thead><tr><th>File</th><th>URL</th><th>Size</th><th>State</th><th>Started</th></tr></thead>
+            <tbody id="rows"><tr><td colspan="5" class="small">No downloads yet.</td></tr></tbody>
+        </table>
+    </div>
+</div>
+<script>
+    function fmt(n) {
+        if (!n) return '—';
+        const u = ['B','KB','MB','GB']; let i = 0;
+        while (n >= 1024 && i < u.length-1) { n /= 1024; i++; }
+        return n.toFixed(1) + ' ' + u[i];
+    }
+    async function load() {
+        const s = await window.dib.store.get();
+        const body = document.getElementById('rows');
+        if (!s.downloads || !s.downloads.length) {
+            body.innerHTML = '<tr><td colspan="5" class="small">No downloads yet.</td></tr>';
+            return;
+        }
+        body.innerHTML = s.downloads.map(d => `
+            <tr>
+              <td>${d.filename}</td>
+              <td class="small">${d.url}</td>
+              <td>${fmt(d.totalBytes)}</td>
+              <td><span class="pill">${d.state}</span></td>
+              <td class="small">${new Date(d.startedAt).toLocaleString('fr-DZ')}</td>
+            </tr>`).join('');
+    }
+    async function clearAll() {
+        const s = await window.dib.store.get();
+        s.downloads = [];
+        await window.dib.store.set(s);
+        load();
+    }
+    window.dib.events.onDownloadUpdate(() => load());
+    load();
+</script>
+</body>
+</html>

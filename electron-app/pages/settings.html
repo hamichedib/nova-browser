@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Settings — DIB HAMICHE</title>
+<link rel="stylesheet" href="_shared.css" />
+</head>
+<body>
+<div class="header">
+    <div class="logo">D</div>
+    <div>
+        <div class="name">DIB HAMICHE</div>
+        <div class="nova">NOVA PRO · SETTINGS</div>
+    </div>
+</div>
+
+<div class="page">
+    <h1>⚙ <span class="accent">Settings</span></h1>
+    <div class="sub">Configure the browser — Configurer le navigateur — تكوين المتصفح</div>
+
+    <div class="card">
+        <h3>General</h3>
+        <div class="row">
+            <div class="col">
+                <label>Default search engine</label>
+                <select id="engine">
+                    <option value="google">Google</option>
+                    <option value="bing">Bing</option>
+                    <option value="duckduckgo">DuckDuckGo</option>
+                    <option value="brave">Brave</option>
+                    <option value="yandex">Yandex</option>
+                    <option value="ecosia">Ecosia</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Interface language</label>
+                <select id="lang">
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
+                    <option value="ar">العربية</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Homepage (URL or dib://newtab)</label>
+                <input id="home" />
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Privacy</h3>
+        <div class="row">
+            <button class="btn secondary" onclick="clearHistory()">Clear history</button>
+            <button class="btn secondary" onclick="clearPasswords()">Clear saved passwords</button>
+            <button class="btn secondary" onclick="openDownloads()">Open downloads folder</button>
+        </div>
+        <p class="small">Data is stored locally under your user profile only. Nothing is sent anywhere.</p>
+    </div>
+
+    <div class="card">
+        <h3>About</h3>
+        <div class="row">
+            <div class="col">
+                <label>Product</label>
+                <div>DIB HAMICHE · NOVA PRO</div>
+            </div>
+            <div class="col">
+                <label>Version</label>
+                <div id="ver">…</div>
+            </div>
+            <div class="col">
+                <label>Engine</label>
+                <div>Chromium (Electron)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <button class="btn" onclick="save()">Save settings</button>
+        <a class="btn secondary" href="dib://newtab">Back to home</a>
+    </div>
+</div>
+
+<script>
+    async function load() {
+        const s = await window.dib.store.get();
+        document.getElementById('engine').value = s.settings.searchEngine || 'google';
+        document.getElementById('lang').value   = s.settings.language     || 'fr';
+        document.getElementById('home').value   = s.settings.homepage     || 'dib://newtab';
+        document.getElementById('ver').textContent = await window.dib.app.version();
+    }
+    async function save() {
+        const s = await window.dib.store.get();
+        s.settings = {
+            ...s.settings,
+            searchEngine: document.getElementById('engine').value,
+            language:     document.getElementById('lang').value,
+            homepage:     document.getElementById('home').value || 'dib://newtab',
+        };
+        await window.dib.store.set(s);
+        await window.dib.app.info('Settings', 'Saved successfully.');
+    }
+    async function clearHistory() {
+        const s = await window.dib.store.get();
+        s.history = [];
+        await window.dib.store.set(s);
+        await window.dib.app.info('History', 'History cleared.');
+    }
+    async function clearPasswords() {
+        const s = await window.dib.store.get();
+        s.passwords = [];
+        await window.dib.store.set(s);
+        await window.dib.app.info('Passwords', 'Saved passwords cleared.');
+    }
+    function openDownloads() { window.dib.app.openDownloadsFolder(); }
+    load();
+</script>
+</body>
+</html>

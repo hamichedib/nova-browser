@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Languages — DIB HAMICHE</title>
+<link rel="stylesheet" href="_shared.css" />
+</head>
+<body>
+<div class="header">
+    <div class="logo">D</div>
+    <div><div class="name">DIB HAMICHE</div><div class="nova">NOVA PRO · LANGUAGES</div></div>
+</div>
+<div class="page">
+    <h1>🌐 <span class="accent">Languages</span></h1>
+    <div class="sub">Interface language preferences.</div>
+
+    <div class="card">
+        <label>Interface language / Langue de l'interface / لغة الواجهة</label>
+        <select id="lang">
+            <option value="fr">Français</option>
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+        </select>
+        <div style="margin-top:14px">
+            <button class="btn" onclick="save()">Save</button>
+            <a class="btn secondary" href="dib://settings">Back to settings</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Spellcheck</h3>
+        <p class="small">Spellcheck is provided by the browser engine and follows the system dictionary.</p>
+    </div>
+</div>
+<script>
+    async function load() {
+        const s = await window.dib.store.get();
+        document.getElementById('lang').value = s.settings.language || 'fr';
+    }
+    async function save() {
+        const s = await window.dib.store.get();
+        s.settings.language = document.getElementById('lang').value;
+        await window.dib.store.set(s);
+        await window.dib.app.info('Languages', 'Language saved.');
+    }
+    load();
+</script>
+</body>
+</html>
