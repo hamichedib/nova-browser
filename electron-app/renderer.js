@@ -6,11 +6,10 @@
    bookmarks, history, shortcuts (GLM 5.1, YouTube, Google).
    ======================================================= */
 
-const UA = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-    'AppleWebKit/537.36 (KHTML, like Gecko)',
-    'Chrome/124.0.0.0 Safari/537.36',
-].join(' ');
+// Firefox UA — Google's embedded-browser block targets Chromium Client Hints,
+// which Firefox doesn't send. This is the same UA applied at the session layer
+// in main.js (app.userAgentFallback).
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0';
 
 const SEARCH_ENGINES = {
     google:     { name: 'Google',     url: (q) => `https://www.google.com/search?q=${encodeURIComponent(q)}` },

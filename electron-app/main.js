@@ -19,13 +19,11 @@ app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
 
 const APP_NAME = 'DIB HAMICHE';
 
-// Make Electron look like a real Chrome install to Google's anti-embed checks:
-// 1. set a clean Chrome UA (no "Electron/…" suffix), and
-// 2. strip the Electron/DIB-HAMICHE tokens from outgoing request headers.
+// Claim to be Firefox 124 on Windows. Google's "embedded browser" detector
+// primarily targets Chromium-based webviews (via Client Hints). Firefox
+// doesn't send Sec-Ch-Ua at all, so sign-in works inline more reliably.
 const CHROME_UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ' +
-  'AppleWebKit/537.36 (KHTML, like Gecko) ' +
-  'Chrome/124.0.0.0 Safari/537.36';
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0';
 app.userAgentFallback = CHROME_UA;
 const USER_DATA_ROOT = path.join(app.getPath('userData'), 'dib-hamiche');
 fs.mkdirSync(USER_DATA_ROOT, { recursive: true });
@@ -141,18 +139,11 @@ function applyChromeUA(ses) {
   ses.webRequest.onBeforeSendHeaders((details, cb) => {
     const headers = details.requestHeaders;
     headers['User-Agent'] = CHROME_UA;
-    // Kill headers Google uses to sniff embedded browsers.
-    if ('Sec-Ch-Ua'          in headers) headers['Sec-Ch-Ua']          = CHROME_CH_UA;
-    if ('sec-ch-ua'          in headers) headers['sec-ch-ua']          = CHROME_CH_UA;
-    if ('Sec-Ch-Ua-Mobile'   in headers) headers['Sec-Ch-Ua-Mobile']   = CHROME_CH_UA_MOBILE;
-    if ('sec-ch-ua-mobile'   in headers) headers['sec-ch-ua-mobile']   = CHROME_CH_UA_MOBILE;
-    if ('Sec-Ch-Ua-Platform' in headers) headers['Sec-Ch-Ua-Platform'] = CHROME_CH_UA_PLATFORM;
-    if ('sec-ch-ua-platform' in headers) headers['sec-ch-ua-platform'] = CHROME_CH_UA_PLATFORM;
-    // Always inject canonical ones (in case Electron didn't send them).
-    headers['Sec-Ch-Ua']          = CHROME_CH_UA;
-    headers['Sec-Ch-Ua-Mobile']   = CHROME_CH_UA_MOBILE;
-    headers['Sec-Ch-Ua-Platform'] = CHROME_CH_UA_PLATFORM;
-    delete headers['X-Electron-Version'];
+    // Firefox never sends Client Hints — stripping them tells Google we're
+    // not a Chromium-based browser, which disables the embedded-webview check.
+    for (const k of Object.keys(headers)) {
+      if (/^sec-ch-ua/i.test(k) || /^x-electron/i.test(k)) delete headers[k];
+    }
     cb({ requestHeaders: headers });
   });
 }
