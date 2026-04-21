@@ -18,6 +18,15 @@ app.commandLine.appendSwitch('allow-running-insecure-content');
 app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
 
 const APP_NAME = 'DIB HAMICHE';
+
+// Make Electron look like a real Chrome install to Google's anti-embed checks:
+// 1. set a clean Chrome UA (no "Electron/…" suffix), and
+// 2. strip the Electron/DIB-HAMICHE tokens from outgoing request headers.
+const CHROME_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ' +
+  'AppleWebKit/537.36 (KHTML, like Gecko) ' +
+  'Chrome/124.0.0.0 Safari/537.36';
+app.userAgentFallback = CHROME_UA;
 const USER_DATA_ROOT = path.join(app.getPath('userData'), 'dib-hamiche');
 fs.mkdirSync(USER_DATA_ROOT, { recursive: true });
 
@@ -113,11 +122,30 @@ app.on('web-contents-created', (_event, contents) => {
     webPreferences.nodeIntegration = false;
     webPreferences.webSecurity = false;
   });
+
+  if (contents.getType() === 'webview') {
+    // Every webview gets the Chrome UA applied at the session layer too.
+    applyChromeUA(contents.session);
+    contents.setUserAgent(CHROME_UA);
+  }
 });
+
+function applyChromeUA(ses) {
+  try { ses.setUserAgent(CHROME_UA); } catch (_) { /* noop */ }
+  ses.webRequest.onBeforeSendHeaders((details, cb) => {
+    const headers = details.requestHeaders;
+    headers['User-Agent'] = CHROME_UA;
+    // Kill any header that would leak Electron/DIB-HAMICHE to Google.
+    delete headers['X-Electron-Version'];
+    cb({ requestHeaders: headers });
+  });
+}
 
 app.whenReady().then(() => {
   // Register dib:// protocol for internal pages (newtab, settings, ...)
   const ses = session.defaultSession;
+  applyChromeUA(ses);
+
   ses.protocol.registerFileProtocol('dib', (request, callback) => {
     const url = request.url.replace(/^dib:\/\//, '').replace(/\/$/, '');
     const mapping = {

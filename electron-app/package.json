@@ -1,7 +1,7 @@
 {
   "name": "dib-hamiche-browser",
   "productName": "DIB HAMICHE",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "DIB HAMICHE",
   "description": "DIB HAMICHE Nova Pro - Modern, elegant, fast browser with GLM 5.1, multi-engine search, Algeria clock, and full browser features.",
   "main": "main.js",

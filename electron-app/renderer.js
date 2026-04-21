@@ -107,10 +107,18 @@ function wireToolbar() {
         flashToast('Bookmarked ★');
     };
 
-    $('#btnGLM').onclick         = () => createTab('https://chat.z.ai/');
-    $('#btnYouTube').onclick     = () => createTab('https://www.youtube.com/');
-    $('#btnGoogleLogin').onclick = () =>
-        createTab('https://accounts.google.com/ServiceLogin?hl=en&continue=https://myaccount.google.com');
+    $('#btnGLM').onclick     = () => createTab('https://chat.z.ai/');
+    $('#btnYouTube').onclick = () => createTab('https://www.youtube.com/');
+    // Google blocks sign-in in any embedded browser (Electron / webview) via
+    // "This browser or app may not be secure". Always open Google Login in the
+    // system browser so the user can finish sign-in, then come back.
+    $('#btnGoogleLogin').onclick = () => window.dib.app.openExternal(
+        'https://accounts.google.com/ServiceLogin?hl=en&continue=https://myaccount.google.com',
+    );
+    $('#btnOpenExternal').onclick = () => {
+        const t = currentTab();
+        if (t && t.url && /^https?:/i.test(t.url)) window.dib.app.openExternal(t.url);
+    };
 }
 
 function wireWindowControls() {
