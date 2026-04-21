@@ -8,6 +8,7 @@ const {
   session,
   shell,
   dialog,
+  protocol,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -16,6 +17,23 @@ const fs = require('fs');
 app.commandLine.appendSwitch('ignore-certificate-errors');
 app.commandLine.appendSwitch('allow-running-insecure-content');
 app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
+
+// Register dib:// as a privileged standard scheme so it behaves like http(s)
+// across every session (default + persist:main). This MUST happen before
+// app.whenReady(). Without it, tabs that navigate to dib://settings get
+// "open with…" prompts from Windows instead of loading the internal page.
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'dib',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      allowServiceWorkers: true,
+    },
+  },
+]);
 
 const APP_NAME = 'DIB HAMICHE';
 
@@ -151,12 +169,16 @@ function applyChromeUA(ses) {
 }
 
 app.whenReady().then(() => {
-  // Register dib:// protocol for internal pages (newtab, settings, ...)
   const ses = session.defaultSession;
+  const tabsSes = session.fromPartition('persist:main');
   applyChromeUA(ses);
-  applyChromeUA(session.fromPartition('persist:main'));
+  applyChromeUA(tabsSes);
 
-  ses.protocol.registerFileProtocol('dib', (request, callback) => {
+  // Register dib:// file handler on every session that can host an internal
+  // page (main shell = default, tabs + login window = persist:main). If we
+  // only register on one of them, navigating to dib://settings in a tab will
+  // fail with the Windows "Open with…" prompt.
+  const dibHandler = (request, callback) => {
     const url = request.url.replace(/^dib:\/\//, '').replace(/\/$/, '');
     const mapping = {
       newtab: 'pages/newtab.html',
@@ -171,7 +193,9 @@ app.whenReady().then(() => {
     };
     const file = mapping[url.split('?')[0]] || mapping.newtab;
     callback({ path: path.join(__dirname, file) });
-  });
+  };
+  ses.protocol.registerFileProtocol('dib', dibHandler);
+  tabsSes.protocol.registerFileProtocol('dib', dibHandler);
 
   // Save all downloads under ~/Downloads/DIB-HAMICHE and track them
   ses.on('will-download', (_e, item) => {
