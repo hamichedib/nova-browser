@@ -96,8 +96,29 @@ jobs:
           Get-ChildItem dist\NovaBrowser -Recurse | Where-Object { -not $_.PSIsContainer } |
             Select-Object FullName, Length | Format-Table -AutoSize
 
-      - name: Upload NovaBrowser
+      - name: Install NSIS
+        shell: pwsh
+        run: choco install nsis -y --no-progress
+
+      - name: Build NovaBrowser installer
+        shell: pwsh
+        run: |
+          $env:Path += ";C:\Program Files (x86)\NSIS"
+          & "C:\Program Files (x86)\NSIS\makensis.exe" /NOCD installer\NovaBrowser.nsi
+
+      - name: List installer
+        shell: pwsh
+        run: |
+          Get-ChildItem dist\NovaBrowser-Setup*.exe | Select-Object Name, Length | Format-Table
+
+      - name: Upload NovaBrowser (portable)
         uses: actions/upload-artifact@v4
         with:
-          name: nova-wpf-browser
+          name: nova-wpf-browser-portable
           path: dist/NovaBrowser/
+
+      - name: Upload NovaBrowser Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-wpf-browser-installer
+          path: dist/NovaBrowser-Setup*.exe
