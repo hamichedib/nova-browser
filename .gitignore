@@ -1,6 +1,27 @@
+# Rust
 target/
+
+# Build output
 dist/
 *.exe
 !installer/*.nsi
+
+# Node
 node_modules/
+
+# macOS
 .DS_Store
+
+# .NET / C#
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+NovaBrowser/Assets/sea_beach.jpg
+
+# IDE
+.vs/
+*.csproj.user

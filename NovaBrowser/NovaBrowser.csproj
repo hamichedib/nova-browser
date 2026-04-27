@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Platforms>AnyCPU;x64</Platforms>
+    <LangVersion>latest</LangVersion>
+    <ApplicationIcon>AppIcon.ico</ApplicationIcon>
+    <AssemblyName>NovaBrowser</AssemblyName>
+    <RootNamespace>NovaBrowser</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>Nova</Authors>
+    <Description>Nova — modern sleek browser built with WPF and CefSharp</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\sea_beach.jpg" />
+    <Content Include="Assets\sea_beach.jpg" Condition="Exists('Assets\sea_beach.jpg')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\newtab.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CefSharp.Wpf.NETCore" Version="146.0.100" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="TimeZoneConverter" Version="6.0.0" />
+  </ItemGroup>
+
+</Project>

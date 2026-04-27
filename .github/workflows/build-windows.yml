@@ -8,8 +8,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
-    name: Build Nova.exe + installer
+  # ── Rust launcher (Firefox-based) ──
+  build-rust-launcher:
+    name: Build Rust launcher + installer
     runs-on: windows-latest
     timeout-minutes: 25
 
@@ -65,3 +66,38 @@ jobs:
           name: nova-windows-installer
           path: dist/Nova-Setup*.exe
           if-no-files-found: warn
+
+  # ── WPF + CefSharp browser (Chromium-based) ──
+  build-wpf-browser:
+    name: Build NovaBrowser WPF (CefSharp)
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore NuGet packages
+        working-directory: NovaBrowser
+        run: dotnet restore -r win-x64
+
+      - name: Build NovaBrowser (Release, x64)
+        working-directory: NovaBrowser
+        run: dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o ../dist/NovaBrowser
+
+      - name: List output
+        shell: pwsh
+        run: |
+          Get-ChildItem dist\NovaBrowser -Recurse | Where-Object { -not $_.PSIsContainer } |
+            Select-Object FullName, Length | Format-Table -AutoSize
+
+      - name: Upload NovaBrowser
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-wpf-browser
+          path: dist/NovaBrowser/
