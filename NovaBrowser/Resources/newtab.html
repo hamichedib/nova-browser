@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nova — New Tab</title>
+    <style>
+      :root {
+        --bg-0: #020010;
+        --bg-1: #0a0119;
+        --bg-2: #120830;
+        --bg-3: #1a0e4a;
+        --accent: #8a5cff;
+        --accent-2: #4cd9ff;
+        --text: #eef1ff;
+        --muted: rgba(238, 241, 255, 0.62);
+        --panel: rgba(18, 8, 48, 0.55);
+        --border: rgba(138, 92, 255, 0.35);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        height: 100%;
+        font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        color: var(--text);
+        background: radial-gradient(
+            ellipse at 15% 10%,
+            var(--bg-3) 0%,
+            var(--bg-1) 55%,
+            var(--bg-0) 100%
+          );
+        overflow-x: hidden;
+      }
+
+      /* aurora blobs */
+      .aurora {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .aurora::before,
+      .aurora::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(90px);
+        opacity: 0.55;
+        animation: drift 18s ease-in-out infinite alternate;
+      }
+      .aurora::before {
+        width: 720px; height: 720px;
+        left: -160px; top: -140px;
+        background: radial-gradient(circle at 30% 30%, var(--accent), transparent 70%);
+      }
+      .aurora::after {
+        width: 640px; height: 640px;
+        right: -120px; bottom: -160px;
+        background: radial-gradient(circle at 70% 70%, var(--accent-2), transparent 70%);
+        animation-delay: -9s;
+      }
+      @keyframes drift {
+        0%   { transform: translate3d(0, 0, 0) scale(1); }
+        100% { transform: translate3d(60px, -40px, 0) scale(1.08); }
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+        min-height: 100%;
+        display: grid;
+        place-items: center;
+        padding: 48px 24px;
+      }
+      .stack {
+        width: min(880px, 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        user-select: none;
+      }
+      .brand-logo {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 10px 40px -8px var(--accent);
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 28px;
+        color: #0a0119;
+      }
+      .brand-word {
+        font-size: 42px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        background: linear-gradient(135deg, var(--accent-2), #fff 50%, var(--accent));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .clock {
+        font-size: 72px;
+        font-weight: 200;
+        letter-spacing: 2px;
+        margin-top: -8px;
+        font-variant-numeric: tabular-nums;
+        direction: ltr;
+      }
+      .date-line {
+        color: var(--muted);
+        font-size: 16px;
+        margin-top: -18px;
+        direction: ltr;
+      }
+      .greet { color: var(--muted); font-size: 18px; margin-top: -12px; }
+
+      form.search {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 18px;
+        border-radius: 18px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        transition: border-color 0.2s, box-shadow 0.2s;
+        direction: ltr;
+      }
+      form.search:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(138, 92, 255, 0.22);
+      }
+      form.search svg { width: 22px; height: 22px; color: var(--muted); flex-shrink: 0; }
+      form.search input {
+        flex: 1;
+        min-width: 0;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text);
+        font-size: 18px;
+      }
+      form.search input::placeholder { color: var(--muted); }
+
+      .tiles {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 14px;
+      }
+      .tile {
+        padding: 16px;
+        border-radius: 14px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        color: var(--text);
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        transition: transform 0.15s, border-color 0.2s, background 0.2s;
+        backdrop-filter: blur(22px);
+        direction: ltr;
+      }
+      .tile:hover {
+        transform: translateY(-3px);
+        border-color: var(--accent);
+        background: rgba(138, 92, 255, 0.14);
+      }
+      .tile-icon {
+        width: 36px; height: 36px;
+        border-radius: 10px;
+        display: grid; place-items: center;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #0a0119;
+      }
+      .tile-label { font-weight: 600; font-size: 15px; }
+      .tile-host  { color: var(--muted); font-size: 12px; }
+
+      footer {
+        position: fixed;
+        left: 0; right: 0; bottom: 14px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+        z-index: 1;
+        direction: ltr;
+      }
+      footer b { color: var(--text); font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <div class="aurora" aria-hidden="true"></div>
+    <main>
+      <div class="stack">
+        <div class="brand">
+          <div class="brand-logo">N</div>
+          <div class="brand-word">Nova</div>
+        </div>
+
+        <div id="clock" class="clock">--:--</div>
+        <div id="dateLine" class="date-line"></div>
+        <div id="greet" class="greet"></div>
+
+        <form class="search" onsubmit="return doSearch(event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.3-4.3" />
+          </svg>
+          <input id="q" placeholder="ابحث في الويب أو الصق رابطاً..."
+                 autocomplete="off" spellcheck="false" autofocus />
+        </form>
+
+        <div class="tiles" id="tiles"></div>
+      </div>
+    </main>
+    <footer>Powered by <b>Chromium</b> · Themed by <b>Nova</b></footer>
+
+    <script>
+      const tiles = [
+        { label: "Google",        host: "google.com",           url: "https://google.com",              icon: "G"  },
+        { label: "YouTube",       host: "youtube.com",          url: "https://youtube.com",             icon: "▶"  },
+        { label: "ChatGPT",       host: "chatgpt.com",          url: "https://chatgpt.com",             icon: "AI" },
+        { label: "GitHub",        host: "github.com",           url: "https://github.com",              icon: "GH" },
+        { label: "X",             host: "x.com",                url: "https://x.com",                   icon: "X"  },
+        { label: "Translate",     host: "translate.google.com", url: "https://translate.google.com",    icon: "ت"  },
+        { label: "Al Jazeera",    host: "aljazeera.net",        url: "https://www.aljazeera.net",       icon: "ج"  },
+        { label: "BBC Arabic",    host: "bbc.com/arabic",       url: "https://www.bbc.com/arabic",      icon: "ب"  },
+        { label: "YouTube عربي",  host: "youtube.com",          url: "https://www.youtube.com/?gl=SA&hl=ar", icon: "▶ع" },
+        { label: "ويكيبيديا",    host: "ar.wikipedia.org",     url: "https://ar.wikipedia.org",        icon: "و"  },
+        { label: "مواقيت الصلاة", host: "islamicfinder.org",    url: "https://www.islamicfinder.org/prayer-times/", icon: "☪" },
+        { label: "Gmail",         host: "mail.google.com",      url: "https://mail.google.com",         icon: "@"  },
+      ];
+
+      const tilesEl = document.getElementById("tiles");
+      for (const t of tiles) {
+        const a = document.createElement("a");
+        a.className = "tile";
+        a.href = t.url;
+        a.innerHTML = `
+          <div class="tile-icon">${t.icon}</div>
+          <div class="tile-label">${t.label}</div>
+          <div class="tile-host">${t.host}</div>`;
+        tilesEl.appendChild(a);
+      }
+
+      function tick() {
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, "0");
+        const mm = String(now.getMinutes()).padStart(2, "0");
+        document.getElementById("clock").textContent = `${hh}:${mm}`;
+
+        const opts = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
+        document.getElementById("dateLine").textContent = now.toLocaleDateString("ar-SA", opts);
+
+        const h = now.getHours();
+        const g = h < 5 ? "طابت ليلتك" :
+                  h < 12 ? "صباح الخير" :
+                  h < 17 ? "مساء الخير" :
+                  h < 22 ? "مساء النور" : "طابت ليلتك";
+        document.getElementById("greet").textContent = `${g} — مرحباً بك في Nova`;
+      }
+      tick();
+      setInterval(tick, 15000);
+
+      function doSearch(e) {
+        e.preventDefault();
+        const v = document.getElementById("q").value.trim();
+        if (!v) return false;
+        let url = v;
+        const looksLikeUrl = /^[a-z][a-z0-9+.\-]*:\/\//i.test(v) ||
+                             /^([a-z0-9-]+\.)+[a-z]{2,}(\/|$)/i.test(v);
+        if (looksLikeUrl) {
+          if (!/^[a-z][a-z0-9+.\-]*:\/\//i.test(v)) url = "https://" + v;
+        } else {
+          url = "https://www.google.com/search?q=" + encodeURIComponent(v);
+        }
+        window.location.href = url;
+        return false;
+      }
+    </script>
+  </body>
+</html>
