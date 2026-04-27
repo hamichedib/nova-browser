@@ -78,7 +78,7 @@ namespace NovaBrowser
             {
                 Dispatcher.Invoke(() =>
                 {
-                    tab.Title = args.NewValue ?? "New Tab";
+                    tab.Title = (args.NewValue as string) ?? "New Tab";
                     UpdateTabBar();
                     if (tab == _activeTab)
                         Title = $"{tab.Title} — Nova Browser";
@@ -89,10 +89,10 @@ namespace NovaBrowser
             {
                 Dispatcher.Invoke(() =>
                 {
-                    tab.Url = args.NewValue;
+                    tab.Url = (args.NewValue as string) ?? "";
                     if (tab == _activeTab)
                     {
-                        AddressBar.Text = args.NewValue;
+                        AddressBar.Text = (args.NewValue as string) ?? "";
                         UpdateNavButtons();
                     }
                 });
